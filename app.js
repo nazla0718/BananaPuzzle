@@ -61,6 +61,27 @@ let feedback = null;
 let timer = null;
 let answerTimer = null;
 
+// Send game events to the VS Code terminal.
+// Run debug-server.js in a separate terminal for this to work.
+function terminalLog(message, data = {}) {
+  fetch("http://localhost:3001/log", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      time: new Date().toLocaleTimeString(),
+      message,
+      data
+    })
+  }).catch(error => {
+    console.warn(
+      "Terminal logger is unavailable:",
+      error.message
+    );
+  });
+}
+
 function loadPlayer() {
   try {
     return {
@@ -82,19 +103,27 @@ function savePlayer() {
 }
 
 function navigate(next) {
+  terminalLog("Navigation", {
+    from: screen,
+    to: next
+  });
+
   clearInterval(timer);
   screen = next;
 
-  $$("[data-page]").forEach(el =>
-    el.classList.toggle("hidden", el.dataset.page !== next)
-  );
+  $$("[data-page]").forEach(el => {
+    el.classList.toggle(
+      "hidden",
+      el.dataset.page !== next
+    );
+  });
 
-  $$(".nav-links button").forEach(button =>
+  $$(".nav-links button").forEach(button => {
     button.classList.toggle(
       "active",
       button.dataset.screen === next
-    )
-  );
+    );
+  });
 
   renderShared();
 
@@ -103,7 +132,10 @@ function navigate(next) {
   if (next === "dashboard") renderDashboard();
   if (next === "profile") renderProfile();
 
-  window.scrollTo({ top: 0, behavior: "smooth" });
+  window.scrollTo({
+    top: 0,
+    behavior: "smooth"
+  });
 }
 
 function isUnlocked(key) {
@@ -153,9 +185,9 @@ function renderLevels() {
     .join("");
 
   $$("[data-start]").forEach(button => {
-    button.addEventListener("click", () =>
-      startGame(button.dataset.start)
-    );
+    button.addEventListener("click", () => {
+      startGame(button.dataset.start);
+    });
   });
 }
 
@@ -195,7 +227,17 @@ function getOptions(answer) {
 }
 
 function startGame(key) {
-  if (!isUnlocked(key)) return;
+  if (!isUnlocked(key)) {
+    terminalLog("Start blocked: trail is locked", {
+      level: key
+    });
+    return;
+  }
+
+  terminalLog("Game started", {
+    level: key,
+    player: player.name
+  });
 
   clearInterval(timer);
   clearTimeout(answerTimer);
@@ -215,13 +257,27 @@ function startGame(key) {
     time = Math.max(0, time - 1);
     $("#timeLeft").textContent = time;
 
-    if (time === 0) finishGame(false);
+    if (time === 0) {
+      terminalLog("Timer expired", {
+        level,
+        question
+      });
+      finishGame(false);
+    }
   }, 1000);
 }
 
 function nextPuzzle() {
   puzzle = makePuzzle(level);
   options = getOptions(puzzle.answer);
+
+  terminalLog("New question", {
+    level,
+    question,
+    left: puzzle.left,
+    operator: puzzle.op,
+    right: puzzle.right
+  });
 }
 
 function renderGame() {
@@ -281,13 +337,23 @@ function renderGame() {
 function chooseAnswer(answer, button) {
   if (feedback || screen !== "play") return;
 
-  feedback =
-    answer === puzzle.answer ? "correct" : "wrong";
+  const correctAnswer = puzzle.answer;
+  const isCorrect = answer === correctAnswer;
+
+  terminalLog("Answer selected", {
+    level,
+    question,
+    answer,
+    correctAnswer,
+    isCorrect
+  });
+
+  feedback = isCorrect ? "correct" : "wrong";
 
   $$(".answer").forEach(b => {
     b.disabled = true;
 
-    if (Number(b.dataset.answer) === puzzle.answer) {
+    if (Number(b.dataset.answer) === correctAnswer) {
       b.classList.add("correct");
     }
   });
@@ -296,9 +362,7 @@ function chooseAnswer(answer, button) {
     button.classList.add("wrong");
   }
 
-  const correct = feedback === "correct";
-
-  if (correct) {
+  if (isCorrect) {
     runScore += 100 + time;
   } else {
     lives--;
@@ -307,15 +371,25 @@ function chooseAnswer(answer, button) {
   $("#livesLeft").textContent = lives;
   $("#runScore").textContent = runScore;
 
-  $("#feedback").textContent = correct
+  $("#feedback").textContent = isCorrect
     ? "\u2728 Correct! Great banana brain!"
-    : "Almost! The right answer is " + puzzle.answer + ".";
+    : "Almost! The right answer is " + correctAnswer + ".";
+
+  terminalLog("Answer result", {
+    correct: isCorrect,
+    score: runScore,
+    livesRemaining: lives
+  });
 
   answerTimer = setTimeout(() => {
-    if (lives <= 0) return finishGame(false);
+    if (lives <= 0) {
+      finishGame(false);
+      return;
+    }
 
     if (question >= levelData[level].questions) {
-      return finishGame(true);
+      finishGame(true);
+      return;
     }
 
     question++;
@@ -326,6 +400,14 @@ function chooseAnswer(answer, button) {
 }
 
 function finishGame(success) {
+  terminalLog("Game finished", {
+    level,
+    success,
+    score: runScore,
+    livesLeft: lives,
+    questionsAnswered: question
+  });
+
   clearInterval(timer);
   clearTimeout(answerTimer);
 
@@ -373,12 +455,22 @@ function finishGame(success) {
   }
 
   renderShared();
-  window.scrollTo({ top: 0, behavior: "smooth" });
+
+  window.scrollTo({
+    top: 0,
+    behavior: "smooth"
+  });
 }
 
 async function submitScore() {
   try {
-    await fetch("api.php?action=score", {
+    terminalLog("Submitting score to PHP API", {
+      player: player.name,
+      score: player.score,
+      bananas: player.bananas
+    });
+
+    const response = await fetch("api.php?action=score", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -389,13 +481,30 @@ async function submitScore() {
         bananas: player.bananas
       })
     });
-  } catch (e) {
-    // Keep the game usable if score submission fails.
+
+    const responseText = await response.text();
+
+    terminalLog("PHP score API response", {
+      status: response.status,
+      body: responseText
+    });
+
+    if (!response.ok) {
+      console.error("Score submission failed:", responseText);
+    }
+  } catch (error) {
+    terminalLog("PHP score submission failed", {
+      error: error.message
+    });
+
+    console.error("Could not submit score:", error.message);
   }
 }
 
 function renderShared() {
   const btn = $("#signInBtn");
+
+  if (!btn) return;
 
   if (player.email) {
     btn.textContent = player.name.split(" ")[0];
@@ -455,6 +564,10 @@ function combinedLeaders() {
 function renderLeaders() {
   const list = combinedLeaders();
 
+  terminalLog("Leaderboard rendered (demo/local data)", {
+    entries: list.length
+  });
+
   $("#leaderList").innerHTML = list
     .map((x, i) => `
       <div class="leader-row">
@@ -490,40 +603,62 @@ function renderProfile() {
     `${player.completed.length} / 3`;
 }
 
-function escapeHtml(s) {
-  return String(s).replace(/[&<>"']/g, c => ({
+function escapeHtml(value) {
+  return String(value).replace(/[&<>"']/g, character => ({
     "&": "&amp;",
     "<": "&lt;",
     ">": "&gt;",
     '"': "&quot;",
     "'": "&#39;"
-  }[c]));
+  }[character]));
 }
 
+// Navigation buttons
 $$("[data-screen]").forEach(button => {
-  button.addEventListener("click", () =>
-    navigate(button.dataset.screen)
-  );
+  button.addEventListener("click", () => {
+    navigate(button.dataset.screen);
+  });
 });
 
-$("#quitGame").addEventListener("click", () => {
-  clearInterval(timer);
-  clearTimeout(answerTimer);
-  navigate("levels");
-});
+// Quit the current game
+const quitButton = $("#quitGame");
 
-$("#signOutBtn").addEventListener("click", () => {
-  player = { ...defaultPlayer };
-  savePlayer();
-  renderShared();
-  navigate("home");
-});
+if (quitButton) {
+  quitButton.addEventListener("click", () => {
+    terminalLog("Game quit by player", {
+      level,
+      question,
+      score: runScore
+    });
 
+    clearInterval(timer);
+    clearTimeout(answerTimer);
+    navigate("levels");
+  });
+}
+
+// Sign out
+const signOutButton = $("#signOutBtn");
+
+if (signOutButton) {
+  signOutButton.addEventListener("click", () => {
+    terminalLog("Player signed out", {
+      player: player.name
+    });
+
+    player = { ...defaultPlayer };
+    savePlayer();
+    renderShared();
+    navigate("home");
+  });
+}
+
+// Sign-in and registration tabs
 $$("[data-auth]").forEach(button => {
   button.addEventListener("click", () => {
     authMode = button.dataset.auth;
 
-    $$("[data-auth]").forEach(x => {
+    $$(".[data-auth]").forEach(x => {
       x.classList.toggle("selected", x === button);
     });
 
@@ -544,28 +679,52 @@ $$("[data-auth]").forEach(button => {
       authMode === "register"
         ? "Create your player profile."
         : "Enter your details to continue.";
+
+    terminalLog("Authentication mode changed", {
+      mode: authMode
+    });
   });
 });
 
-$("#authForm").addEventListener("submit", e => {
-  e.preventDefault();
+// Demo sign-in form
+const authForm = $("#authForm");
 
-  const fd = new FormData(e.currentTarget);
-  const email = String(fd.get("email"));
+if (authForm) {
+  authForm.addEventListener("submit", event => {
+    event.preventDefault();
 
-  const name = String(
-    fd.get("name") ||
-    email.split("@")[0] ||
-    "Jungle Player"
-  );
+    const formData = new FormData(event.currentTarget);
+    const email = String(formData.get("email") || "");
 
-  player = { ...player, name, email };
+    const name = String(
+      formData.get("name") ||
+      email.split("@")[0] ||
+      "Jungle Player"
+    );
 
-  savePlayer();
-  renderShared();
-  navigate("dashboard");
-});
+    player = {
+      ...player,
+      name,
+      email
+    };
 
+    terminalLog("Demo sign-in submitted", {
+      name: player.name,
+      email: player.email
+    });
+
+    savePlayer();
+    renderShared();
+    navigate("dashboard");
+  });
+}
+
+// Start the app
 renderShared();
 renderLevels();
 renderDashboard();
+
+terminalLog("Banana Bounce application loaded", {
+  player: player.name,
+  currentScreen: screen
+});
