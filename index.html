@@ -1,0 +1,410 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#fffaf0">
+  <title>Banana Bounce — Puzzle Fun</title>
+  
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app-shell">
+
+  <header class="topbar">
+    <button class="brand" data-screen="home">
+      <span class="brand-mark">&#128053;</span>
+      <span><b>Banana</b> Bounce</span>
+    </button>
+
+    <nav class="nav-links">
+      <button data-screen="home" class="active">Home</button>
+      <button data-screen="about">About</button>
+      <button data-screen="dashboard">Dashboard</button>
+      <button data-screen="leaderboard">Leaderboard</button>
+    </nav>
+
+    <button class="button primary small" id="signInBtn">Sign in</button>
+  </header>
+
+  <main id="app">
+
+    <!-- HOME PAGE -->
+    <section class="hero page" data-page="home">
+      <div class="hero-copy">
+        <div class="eyebrow">&#11088; Learn, play &amp; grow!</div>
+
+        <h1>Go bananas for <span>puzzle fun!</span></h1>
+
+        <p>
+          Help Momo the monkey solve clever number puzzles,
+          collect bananas, and climb all the way to the Golden Summit.
+        </p>
+
+        <div class="button-row">
+          <button class="button primary large" data-screen="levels">
+            &#9654; Start playing
+          </button>
+
+          <button class="button secondary large" data-screen="about">
+            How it works &#8594;
+          </button>
+        </div>
+
+        <div class="trust-row">
+          <div>
+            <span>&#10003;</span>
+            <b>Kid-safe</b>
+            <small>Play worry-free</small>
+          </div>
+
+          <div>
+            <span>&#9733;</span>
+            <b>3 fun levels</b>
+            <small>Grow your skills</small>
+          </div>
+
+          <div>
+            <span>&#127942;</span>
+            <b>Win rewards</b>
+            <small>Climb the board</small>
+          </div>
+        </div>
+      </div>
+
+      <div class="hero-art" aria-label="Momo the monkey">
+        <div class="sun"></div>
+        <div class="leaf leaf-one"></div>
+        <div class="leaf leaf-two"></div>
+        <div class="big-banana">&#127820;</div>
+        <div class="big-monkey">&#128053;</div>
+        <div class="speech">Let’s play!</div>
+        <div class="ground"></div>
+      </div>
+    </section>
+
+    <!-- ABOUT PAGE -->
+    <section class="page narrow hidden" data-page="about">
+      <div class="section-heading centered">
+        <span class="kicker">Momo’s mission</span>
+        <h2>Big skills through little puzzles</h2>
+        <p>
+          Banana Bounce makes quick-fire number practice
+          feel like a jungle adventure.
+        </p>
+      </div>
+
+      <div class="feature-grid">
+        <article class="feature-card coral">
+          <span>&#127820;</span>
+          <h3>Solve</h3>
+          <p>Count bananas and crack addition and subtraction puzzles.</p>
+        </article>
+
+        <article class="feature-card blue">
+          <span>&#9201;&#65039;</span>
+          <h3>Beat the clock</h3>
+          <p>Think quickly as each jungle trail gets a little trickier.</p>
+        </article>
+
+        <article class="feature-card purple">
+          <span>&#127942;</span>
+          <h3>Grow</h3>
+          <p>Earn points, unlock levels, and celebrate every new best.</p>
+        </article>
+      </div>
+
+      <div class="about-banner">
+        <div class="monkey-badge">&#128053;</div>
+
+        <div>
+          <h3>Ready to join Momo?</h3>
+          <p>No ads, no distractions—just cheerful brain-boosting play.</p>
+        </div>
+
+        <button class="button primary" data-screen="levels">
+          Choose a level
+        </button>
+      </div>
+    </section>
+
+    <!-- DASHBOARD PAGE -->
+    <section class="page hidden" data-page="dashboard">
+      <div class="welcome">
+        <div>
+          <span class="kicker">Your jungle base</span>
+          <h2 id="welcomeName">Hi, Jungle Guest!</h2>
+          <p>Ready for another brain-boosting adventure?</p>
+        </div>
+
+        <button class="button primary" data-screen="levels">
+          &#9654; Play now
+        </button>
+      </div>
+
+      <div class="stat-grid">
+        <article>
+          <span class="stat-icon yellow">&#127820;</span>
+          <div>
+            <small>Bananas collected</small>
+            <strong id="dashBananas">0</strong>
+          </div>
+        </article>
+
+        <article>
+          <span class="stat-icon coral">&#11088;</span>
+          <div>
+            <small>Total score</small>
+            <strong id="dashScore">0</strong>
+          </div>
+        </article>
+
+        <article>
+          <span class="stat-icon blue">&#127942;</span>
+          <div>
+            <small>Trails completed</small>
+            <strong id="dashCompleted">0 / 3</strong>
+          </div>
+        </article>
+      </div>
+
+      <div class="dashboard-grid">
+        <article class="panel continue-card">
+          <div>
+            <span class="kicker">Continue your journey</span>
+            <h3 id="nextTrail">Bronze Trail</h3>
+            <p>Jump back in and help Momo reach the treetops.</p>
+            <button class="button primary" data-screen="levels">
+              Choose trail &#8594;
+            </button>
+          </div>
+
+          <div class="dashboard-monkey">&#128053;</div>
+        </article>
+
+        <article class="panel">
+          <div class="panel-title">
+            <h3>Top adventurers</h3>
+            <button data-screen="leaderboard">View all &#8594;</button>
+          </div>
+
+          <div id="miniLeaders"></div>
+        </article>
+      </div>
+    </section>
+
+    <!-- LEVEL SELECTION PAGE -->
+    <section class="page narrow hidden" data-page="levels">
+      <div class="section-heading centered">
+        <span class="kicker">Pick your adventure</span>
+        <h2>Choose your jungle trail</h2>
+        <p>
+          Every trail brings new puzzles, bigger challenges,
+          and more bananas.
+        </p>
+      </div>
+
+      <div class="level-grid" id="levelGrid"></div>
+
+      <div class="unlock-note">
+        &#127807;
+        <span>Complete each trail to unlock the next one. You’ve got this!</span>
+      </div>
+    </section>
+
+    <!-- GAME PAGE -->
+    <section class="game-page hidden" data-page="play">
+      <div class="game-bar">
+        <button class="quit" id="quitGame">&#8592; Quit</button>
+
+        <div class="progress-wrap">
+          <span id="progressText">Question 1 of 5</span>
+          <div class="progress">
+            <i id="progressFill" style="width:20%"></i>
+          </div>
+        </div>
+
+        <div class="game-stat time">
+          &#9719; <b id="timeLeft">60</b>s
+        </div>
+
+        <div class="game-stat lives">
+          &#9829; <b id="livesLeft">6</b>
+        </div>
+
+        <div class="game-stat score">
+          &#11088; <b id="runScore">0</b>
+        </div>
+      </div>
+
+      <div class="puzzle-card">
+        <span class="kicker" id="levelLabel">BRONZE TRAIL</span>
+
+        <h2>Help Momo solve it!</h2>
+        <p>Count carefully and choose the right answer.</p>
+
+        <div class="puzzle" id="puzzle">3 + 2 = ?</div>
+
+        <div class="answer-grid" id="answerGrid"></div>
+
+        <div class="feedback" id="feedback" aria-live="polite"></div>
+
+        <div class="game-momo">
+          &#128053; <span>&#127820;</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- RESULTS PAGE -->
+    <section class="page result-page hidden" data-page="results">
+      <div class="result-card">
+        <div class="result-illustration" id="resultEmoji">&#127881;</div>
+
+        <span class="kicker" id="resultKicker">TRAIL COMPLETE</span>
+
+        <h2 id="resultTitle">Amazing work!</h2>
+        <p id="resultText">Momo is proud of you.</p>
+
+        <div class="result-stats">
+          <div>
+            <small>Score earned</small>
+            <strong id="resultScore">0</strong>
+          </div>
+
+          <div>
+            <small>Bananas earned</small>
+            <strong id="resultBananas">0 &#127820;</strong>
+          </div>
+        </div>
+
+        <div class="button-row centered">
+          <button class="button primary" data-screen="levels">
+            Play another trail
+          </button>
+
+          <button class="button secondary" data-screen="dashboard">
+            My dashboard
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- LEADERBOARD PAGE -->
+    <section class="page narrow leaderboard-page hidden" data-page="leaderboard">
+      <div class="section-heading centered">
+        <span class="kicker">Jungle champions</span>
+        <h2>Leaderboard</h2>
+        <p>Big cheers for our top puzzle-solving adventurers.</p>
+      </div>
+
+      <div class="leader-list" id="leaderList"></div>
+    </section>
+
+    <!-- PROFILE PAGE -->
+    <section class="page narrow hidden" data-page="profile">
+      <div class="section-heading centered">
+        <span class="kicker">Your profile</span>
+        <h2 id="profileName">Jungle Guest</h2>
+        <p id="profileEmail"></p>
+      </div>
+
+      <div class="stat-grid">
+        <article>
+          <span class="stat-icon yellow">&#127820;</span>
+          <div>
+            <small>Bananas</small>
+            <strong id="profileBananas">0</strong>
+          </div>
+        </article>
+
+        <article>
+          <span class="stat-icon coral">&#11088;</span>
+          <div>
+            <small>Score</small>
+            <strong id="profileScore">0</strong>
+          </div>
+        </article>
+
+        <article>
+          <span class="stat-icon blue">&#127942;</span>
+          <div>
+            <small>Trails</small>
+            <strong id="profileCompleted">0 / 3</strong>
+          </div>
+        </article>
+      </div>
+
+      <div class="center">
+        <button class="button secondary" id="signOutBtn">Sign out</button>
+      </div>
+    </section>
+
+    <!-- AUTHENTICATION PAGE -->
+    <section class="auth-page hidden" data-page="auth">
+      <div class="auth-art">
+        <div class="auth-monkey">&#128053;</div>
+        <h2>Your next adventure awaits!</h2>
+        <p>Sign in to save your scores and keep climbing.</p>
+      </div>
+
+      <form class="auth-card" id="authForm">
+        <div class="auth-tabs">
+          <button type="button" class="selected" data-auth="signin">
+            Sign in
+          </button>
+
+          <button type="button" data-auth="register">
+            Create account
+          </button>
+        </div>
+
+        <h2 id="authTitle">Welcome back!</h2>
+        <p id="authSubtitle">Enter your details to continue.</p>
+
+        <label id="nameLabel" class="hidden">
+          Your name
+          <input name="name" placeholder="Momo Player">
+        </label>
+
+        <label>
+          Email address
+          <input
+            type="email"
+            name="email"
+            placeholder="you@example.com"
+            required
+          >
+        </label>
+
+        <label>
+          Password
+          <input
+            type="password"
+            name="password"
+            placeholder="At least 6 characters"
+            minlength="6"
+            required
+          >
+        </label>
+
+        <button class="button primary wide" type="submit">
+          Let’s go! &#8594;
+        </button>
+
+        <small class="auth-note">
+          Demo mode: account details are stored locally in this browser.
+        </small>
+      </form>
+    </section>
+
+  </main>
+
+  <footer>
+    &#127820; <b>Banana Bounce</b> · Little puzzles, big jungle adventures.
+  </footer>
+
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
